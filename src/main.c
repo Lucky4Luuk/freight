@@ -1,50 +1,75 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <dirent.h>
 
+#include "error.h"
+#include "util.h"
+#include "config.h"
 #include "../deps/tomlc99/toml.h"
+#include "../deps/stb_ds/stb_ds.h"
 
-void error(const char* err, const char* info) {
-	fprintf(stderr, "%s%s%s\n", err, info?"\n":"", info?info:"");
-	exit(1);
+void build_recursive(build_config* config, char* basepath, char*** vector) {
+	char path[1000];
+
+	struct dirent* dp;
+	DIR* dir = opendir(basepath);
+	if (!dir) { return; }
+
+	while ((dp = readdir(dir)) != NULL) {
+		if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0) {
+			if (ends_with(dp->d_name, ".c")) {
+				int needed = format_length("%s/%s", basepath, dp->d_name);
+				char* s = malloc(sizeof(char) * needed);
+				sprintf(s, "%s/%s", basepath, dp->d_name);
+				arrpush(*vector, s);
+			}
+
+			strcpy(path, basepath);
+			strcat(path, "/");
+			strcat(path, dp->d_name);
+
+			build_recursive(config, path, vector);
+		}
+	}
+
+	closedir(dir);
 }
 
-typedef struct {
-	char* name;
-} build_config;
+void build(build_config* config) {
+	printf("Building %s...\n", config->name);
+	char** vector = NULL;
+	build_recursive(config, "src", &vector);
+	build_recursive(config, "deps", &vector);
+	size_t needed = 0;
+	for (int i = 0; i < arrlen(vector); ++i)
+		needed += strlen(vector[i]) + 1;
+	char* concat = malloc(sizeof(char) * needed);
+	if (!concat) { error("Failed to allocate string!", NULL); }
+	strcpy(concat, vector[0]);
+	strcat(concat, " ");
+	for (int i = 1; i < arrlen(vector); ++i) {
+		strcat(concat, vector[i]);
+		strcat(concat, " ");
+	}
+	arrfree(vector);
 
-build_config* load_config() {
-	FILE* fp;
-	char errbuf[200];
-	build_config* conf = malloc(sizeof(build_config));
-
-	fp = fopen("freight.toml", "r");
-	if (!fp) { error("No freight.toml found!", NULL); }
-
-	toml_table_t* conf_raw = toml_parse_file(fp, errbuf, sizeof(errbuf));
-	fclose(fp);
-	if (!conf_raw) { error("Could not parse toml file!", errbuf); }
-
-	toml_table_t* package = toml_table_in(conf_raw, "package");
-	if (!package) { error("Could not find [package]!", NULL); }
-
-	toml_datum_t package_name = toml_string_in(package, "name");
-	if (!package_name.ok) { error("No package name specified!", NULL); }
-	conf->name = malloc(strlen(package_name.u.s)+1);
-	strcpy(conf->name, package_name.u.s);
-	free(package_name.u.s);
-
-	return conf;
+	// Build command
+	needed = format_length("%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
+	printf("needed: %ld\n", needed);
+	printf("%s %s %s -o %s\n", config->compiler, config->cflags, concat, config->name);
+	char* cmd = malloc(sizeof(char) * needed);
+	sprintf(cmd, "%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
+	printf("Invoking `%s`\n", cmd);
+	system(cmd);
 }
 
-void build() {
-	build_config* config;
-	config = load_config();
-	printf("name: %s\n", config->name);
-}
-
-void run() {
-	build();
+void run(build_config* config) {
+	build(config);
+	int needed = format_length("./%s", config->name);
+	char* cmd = malloc(needed);
+	sprintf(cmd, "./%s", config->name);
+	system(cmd);
 }
 
 int main(int argc, char *argv[]) {
@@ -52,9 +77,13 @@ int main(int argc, char *argv[]) {
 		printf("Freight help: not yet implemented!\n");
 	} else {
 		if (strcmp(argv[1], "build") == 0) {
-			build();
+			build_config* config;
+			config = load_config();
+			build(config);
 		} else if (strcmp(argv[1], "run") == 0) {
-			run();
+			build_config* config;
+			config = load_config();
+			run(config);
 		} else {
 			printf("Unknown argument specified\n");
 		}

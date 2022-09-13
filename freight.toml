@@ -1,2 +1,4 @@
 [package]
 name = "freight"
+compiler = "clang"
+cflags = "-std=c99"
