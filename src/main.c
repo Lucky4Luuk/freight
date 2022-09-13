@@ -56,8 +56,6 @@ void build(build_config* config) {
 
 	// Build command
 	needed = format_length("%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
-	printf("needed: %ld\n", needed);
-	printf("%s %s %s -o %s\n", config->compiler, config->cflags, concat, config->name);
 	char* cmd = malloc(sizeof(char) * needed);
 	sprintf(cmd, "%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
 	printf("Invoking `%s`\n", cmd);
@@ -73,10 +71,13 @@ void run(build_config* config) {
 }
 
 int main(int argc, char *argv[]) {
+	const char* HELP_STRING = "Freight\n\thelp - shows this\n\tbuild - builds project in current directory\n\trun - builds and runs project in current directory\n";
 	if (argc < 2) {
-		printf("Freight help: not yet implemented!\n");
+		printf("%s", HELP_STRING);
 	} else {
-		if (strcmp(argv[1], "build") == 0) {
+		if (strcmp(argv[1], "help") == 0) {
+			printf("%s", HELP_STRING);
+		} else if (strcmp(argv[1], "build") == 0) {
 			build_config* config;
 			config = load_config();
 			build(config);
