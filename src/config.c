@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../deps/dirent/dirent.h"
 
 #include "error.h"
 #include "../deps/tomlc99/toml.h"
+#include "../deps/dirent/dirent.h"
 
 build_config* load_config() {
 	FILE* fp;

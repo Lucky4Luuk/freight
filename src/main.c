@@ -57,18 +57,15 @@ void build(build_config* config) {
 	arrfree(vector);
 
 	// Build command
-	needed = strlen(config->name) + 1;
-	char* output;
 	#if defined(_WIN32)
-		output = malloc(needed + 4);
-		strcpy(output, config->name);
-		strcat(output, ".exe");
+		needed = format_length("%s %s %s -o %s.exe", config->compiler, config->cflags, concat, config->name);
+		char* cmd = malloc(sizeof(char) * needed);
+		sprintf(cmd, "%s %s %s -o %s.exe", config->compiler, config->cflags, concat, config->name);
 	#else
-		strcpy(output, config->name);
+		needed = format_length("%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
+		char* cmd = malloc(sizeof(char) * needed);
+		sprintf(cmd, "%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
 	#endif
-	needed = format_length("%s %s %s -o %s", config->compiler, config->cflags, concat, output);
-	char* cmd = malloc(sizeof(char) * needed);
-	sprintf(cmd, "%s %s %s -o %s", config->compiler, config->cflags, concat, output);
 	printf("Invoking `%s`\n", cmd);
 	system(cmd);
 }

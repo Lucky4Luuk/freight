@@ -6,6 +6,9 @@
  * under the MIT license.  For all details and documentation, see
  * https://github.com/tronkko/dirent
  */
+
+#if defined(_WIN32)
+
 #ifndef DIRENT_H
 #define DIRENT_H
 
@@ -1210,3 +1213,7 @@ dirent_set_errno(int error)
 }
 #endif
 #endif /*DIRENT_H*/
+
+#else
+#include <dirent.h>
+#endif

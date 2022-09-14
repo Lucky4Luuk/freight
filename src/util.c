@@ -8,8 +8,11 @@
 #include "../deps/dirent/dirent.h"
 
 #if defined(_WIN32)
-#include <wchar.h>
-#include <direct.h>
+    #include <wchar.h>
+    #include <direct.h>
+#else
+    #include <sys/stat.h>
+    #include <unistd.h>
 #endif
 
 int ends_with(const char *str, const char *suffix) {
