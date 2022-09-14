@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <dirent.h>
+#include "../deps/dirent/dirent.h"
 #include <sys/stat.h>
 #include <sys/types.h>
-#include<unistd.h>
 
 #include "error.h"
 #include "util.h"
@@ -58,9 +57,18 @@ void build(build_config* config) {
 	arrfree(vector);
 
 	// Build command
-	needed = format_length("%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
+	needed = strlen(config->name) + 1;
+	char* output;
+	#if defined(_WIN32)
+		output = malloc(needed + 4);
+		strcpy(output, config->name);
+		strcat(output, ".exe");
+	#else
+		strcpy(output, config->name);
+	#endif
+	needed = format_length("%s %s %s -o %s", config->compiler, config->cflags, concat, output);
 	char* cmd = malloc(sizeof(char) * needed);
-	sprintf(cmd, "%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
+	sprintf(cmd, "%s %s %s -o %s", config->compiler, config->cflags, concat, output);
 	printf("Invoking `%s`\n", cmd);
 	system(cmd);
 }
@@ -86,20 +94,22 @@ int main(int argc, char *argv[]) {
 			if (argc < 3) {
 				error("No name provided!", NULL);
 			}
+			printf("Creating project named %s...\n", argv[2]);
 			if (stat(argv[2], &st) != -1) {
 				error("Directory already exists!", NULL);
 			}
-			mkdir(argv[2], 0777);
-			chdir(argv[2]);
+			cross_mkdir(argv[2]);
+			cross_chdir(argv[2]);
 			FILE* f = fopen("freight.toml", "w");
 			fprintf(f, "[package]\nname=\"%s\"\ncompiler=\"clang\"\ncflags=\"-std=c99\"", argv[2]);
 			fclose(f);
-			mkdir("deps", 0777);
-			mkdir("src", 0777);
-			chdir("src");
+			cross_mkdir("deps");
+			cross_mkdir("src");
+			cross_chdir("src");
 			f = fopen("main.c", "w");
 			fprintf(f, "#include <stdio.h>\n\nint main() {\n\tprintf(\"Hello, world!\");\n\treturn 0;\n}");
 			fclose(f);
+			printf("Project created!\n");
 		} else if (strcmp(argv[1], "build") == 0) {
 			build_config* config;
 			config = load_config();
