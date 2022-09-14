@@ -2,6 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include<unistd.h>
 
 #include "error.h"
 #include "util.h"
@@ -70,13 +73,33 @@ void run(build_config* config) {
 	system(cmd);
 }
 
+struct stat st = {0};
+
 int main(int argc, char *argv[]) {
-	const char* HELP_STRING = "Freight\n\thelp - shows this\n\tbuild - builds project in current directory\n\trun - builds and runs project in current directory\n";
+	const char* HELP_STRING = "Freight\n\thelp - shows this\n\tnew <name> - creates a new project\n\tbuild - builds project in current directory\n\trun - builds and runs project in current directory\n";
 	if (argc < 2) {
 		printf("%s", HELP_STRING);
 	} else {
 		if (strcmp(argv[1], "help") == 0) {
 			printf("%s", HELP_STRING);
+		} else if (strcmp(argv[1], "new") == 0) {
+			if (argc < 3) {
+				error("No name provided!", NULL);
+			}
+			if (stat(argv[2], &st) != -1) {
+				error("Directory already exists!", NULL);
+			}
+			mkdir(argv[2], 0777);
+			chdir(argv[2]);
+			FILE* f = fopen("freight.toml", "w");
+			fprintf(f, "[package]\nname=\"%s\"\ncompiler=\"clang\"\ncflags=\"-std=c99\"", argv[2]);
+			fclose(f);
+			mkdir("deps", 0777);
+			mkdir("src", 0777);
+			chdir("src");
+			f = fopen("main.c", "w");
+			fprintf(f, "#include <stdio.h>\n\nint main() {\n\tprintf(\"Hello, world!\");\n\treturn 0;\n}");
+			fclose(f);
 		} else if (strcmp(argv[1], "build") == 0) {
 			build_config* config;
 			config = load_config();
