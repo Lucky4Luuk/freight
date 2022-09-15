@@ -2,3 +2,8 @@
 name = "freight"
 compiler = "clang"
 cflags = "-std=c99"
+
+[dependencies]
+tomlc99 = "local"
+stb_ds = "local"
+dirent = "local"

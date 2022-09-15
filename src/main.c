@@ -38,7 +38,15 @@ void build_recursive(build_config* config, char* basepath, char*** vector) {
 	closedir(dir);
 }
 
+void build_dependencies(build_config* config) {
+	printf("Building %d dependencies...\n", config->dep_vec_len);
+	for (int i = 0; i < config->dep_vec_len; i++) {
+		printf("  Building %s v%s\n", config->dep_vec[i], config->dep_version_vec[i]);
+	}
+}
+
 void build(build_config* config) {
+	build_dependencies(config);
 	printf("Building %s...\n", config->name);
 	char** vector = NULL;
 	build_recursive(config, "src", &vector);
@@ -57,17 +65,25 @@ void build(build_config* config) {
 	arrfree(vector);
 
 	// Build command
-	#if defined(_WIN32)
-		needed = format_length("%s %s %s -o %s.exe", config->compiler, config->cflags, concat, config->name);
+	if (config->lib == 1) {
+		needed = format_length("%s %s %s -c %s.o", config->compiler, config->cflags, concat, config->name);
 		char* cmd = malloc(sizeof(char) * needed);
-		sprintf(cmd, "%s %s %s -o %s.exe", config->compiler, config->cflags, concat, config->name);
-	#else
-		needed = format_length("%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
-		char* cmd = malloc(sizeof(char) * needed);
-		sprintf(cmd, "%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
-	#endif
-	printf("Invoking `%s`\n", cmd);
-	system(cmd);
+		sprintf(cmd, "%s %s %s -o %s.o", config->compiler, config->cflags, concat, config->name);
+		printf("Invoking `%s`\n", cmd);
+		system(cmd);
+	} else {
+		#if defined(_WIN32)
+			needed = format_length("%s %s %s -o %s.exe", config->compiler, config->cflags, concat, config->name);
+			char* cmd = malloc(sizeof(char) * needed);
+			sprintf(cmd, "%s %s %s -o %s.exe", config->compiler, config->cflags, concat, config->name);
+		#else
+			needed = format_length("%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
+			char* cmd = malloc(sizeof(char) * needed);
+			sprintf(cmd, "%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
+		#endif
+		printf("Invoking `%s`\n", cmd);
+		system(cmd);
+	}
 }
 
 void run(build_config* config) {
@@ -81,7 +97,7 @@ void run(build_config* config) {
 struct stat st = {0};
 
 int main(int argc, char *argv[]) {
-	const char* HELP_STRING = "Freight\n\thelp - shows this\n\tnew <name> - creates a new project\n\tbuild - builds project in current directory\n\trun - builds and runs project in current directory\n";
+	const char* HELP_STRING = "Freight\n  help - shows this\n  new <name> - creates a new project\n  build - builds project in current directory\n  run - builds and runs project in current directory\n";
 	if (argc < 2) {
 		printf("%s", HELP_STRING);
 	} else {
@@ -104,17 +120,19 @@ int main(int argc, char *argv[]) {
 			cross_mkdir("src");
 			cross_chdir("src");
 			f = fopen("main.c", "w");
-			fprintf(f, "#include <stdio.h>\n\nint main() {\n\tprintf(\"Hello, world!\");\n\treturn 0;\n}");
+			fprintf(f, "#include <stdio.h>\n\nint main() {\n\tprintf(\"Hello, world!\\n\");\n\treturn 0;\n}");
 			fclose(f);
 			printf("Project created!\n");
 		} else if (strcmp(argv[1], "build") == 0) {
 			build_config* config;
 			config = load_config();
 			build(config);
+			conf_free(config);
 		} else if (strcmp(argv[1], "run") == 0) {
 			build_config* config;
 			config = load_config();
 			run(config);
+			conf_free(config);
 		} else {
 			printf("Unknown argument specified\n");
 		}
