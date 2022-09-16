@@ -96,10 +96,18 @@ void build(build_config* config) {
 
 void run(build_config* config) {
 	build(config);
-	int needed = format_length("./%s", config->name);
-	char* cmd = malloc(needed);
-	sprintf(cmd, "./%s", config->name);
-	system(cmd);
+	printf("Running program...\n");
+	#if defined(_WIN32)
+		int needed = format_length("%s.exe", config->name);
+		char* cmd = malloc(needed);
+		sprintf(cmd, "%s.exe", config->name);
+		system(cmd);
+	#else
+		int needed = format_length("./%s", config->name);
+		char* cmd = malloc(needed);
+		sprintf(cmd, "./%s", config->name);
+		system(cmd);
+	#endif
 }
 
 struct stat st = {0};
