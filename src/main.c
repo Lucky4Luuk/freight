@@ -10,6 +10,7 @@
 #include "../deps/dirent/src/dirent.h"
 #include "../deps/tomlc99/src/toml.h"
 #include "../deps/stb_ds/src/stb_ds.h"
+#include "../deps/colors/src/lib.h"
 
 void build_recursive(build_config* config, char* basepath, char*** vector) {
 	char path[1000];
@@ -55,6 +56,9 @@ void build_dependencies(build_config* config, char*** vector) {
 }
 
 void build(build_config* config) {
+	// Set color
+	printf("%s", COLOR_GREEN);
+
 	// Test if the right folders exist
 	if (!dir_exists("deps")) { error("Project setup is wrong!", "`deps` folder is missing!"); }
 	if (!dir_exists("src")) { error("Project setup is wrong!", "`src` folder is missing!"); }
@@ -62,6 +66,7 @@ void build(build_config* config) {
 	// Build self and dependencies
 	char** vector = NULL;
 	build_dependencies(config, &vector);
+	printf("%s", COLOR_GREEN);
 	printf("Building %s...\n", config->name);
 	build_recursive(config, "src", &vector);
 	size_t needed = 0;
@@ -83,6 +88,7 @@ void build(build_config* config) {
 		char* cmd = malloc(sizeof(char) * needed);
 		sprintf(cmd, "%s %s %s -c -o %s.o", config->compiler, config->cflags, concat, config->name);
 		printf("Invoking `%s`\n", cmd);
+		printf("%s", COLOR_RESET);
 		system(cmd);
 	} else {
 		#if defined(_WIN32)
@@ -95,13 +101,16 @@ void build(build_config* config) {
 			sprintf(cmd, "%s %s %s -o %s", config->compiler, config->cflags, concat, config->name);
 		#endif
 		printf("Invoking `%s`\n", cmd);
+		printf("%s", COLOR_RESET);
 		system(cmd);
 	}
 }
 
 void run(build_config* config) {
 	build(config);
-	printf("Running program...\n");
+	printf("%s", COLOR_GREEN);
+	printf("Running program...\n==================\n");
+	printf("%s", COLOR_RESET);
 	#if defined(_WIN32)
 		int needed = format_length("%s.exe", config->name);
 		char* cmd = malloc(needed);
