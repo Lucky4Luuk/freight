@@ -1,0 +1,5 @@
+[package]
+name = "tomlc99"
+compiler = "clang"
+cflags = "-std=c99"
+lib = true

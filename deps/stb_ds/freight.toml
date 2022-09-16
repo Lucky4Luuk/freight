@@ -1,0 +1,5 @@
+[package]
+name = "stb_ds"
+compiler = "clang"
+cflags = "-std=c99"
+lib = true

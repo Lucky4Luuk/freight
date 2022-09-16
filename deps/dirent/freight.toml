@@ -1,0 +1,5 @@
+[package]
+name = "dirent"
+compiler = "clang"
+cflags = "-std=c99"
+lib = true

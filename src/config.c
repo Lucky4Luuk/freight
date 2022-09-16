@@ -5,9 +5,9 @@
 #include <stdlib.h>
 
 #include "error.h"
-#include "../deps/tomlc99/toml.h"
-#include "../deps/dirent/dirent.h"
-#include "../deps/stb_ds/stb_ds.h"
+#include "../deps/tomlc99/src/toml.h"
+#include "../deps/dirent/src/dirent.h"
+#include "../deps/stb_ds/src/stb_ds.h"
 #include "util.h"
 
 build_config* load_config() {

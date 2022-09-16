@@ -1,15 +1,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../deps/dirent/dirent.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 
 #include "error.h"
 #include "util.h"
 #include "config.h"
-#include "../deps/tomlc99/toml.h"
-#include "../deps/stb_ds/stb_ds.h"
+#include "../deps/dirent/src/dirent.h"
+#include "../deps/tomlc99/src/toml.h"
+#include "../deps/stb_ds/src/stb_ds.h"
 
 void build_recursive(build_config* config, char* basepath, char*** vector) {
 	char path[1000];
@@ -55,6 +55,11 @@ void build_dependencies(build_config* config, char*** vector) {
 }
 
 void build(build_config* config) {
+	// Test if the right folders exist
+	if (!dir_exists("deps")) { error("Project setup is wrong!", "`deps` folder is missing!"); }
+	if (!dir_exists("src")) { error("Project setup is wrong!", "`src` folder is missing!"); }
+
+	// Build self and dependencies
 	char** vector = NULL;
 	build_dependencies(config, &vector);
 	printf("Building %s...\n", config->name);
@@ -72,7 +77,7 @@ void build(build_config* config) {
 	}
 	arrfree(vector);
 
-	// Build command
+	// Construct and invoke build command
 	if (config->lib == 1) {
 		needed = format_length("%s %s %s -c -o %s.o", config->compiler, config->cflags, concat, config->name);
 		char* cmd = malloc(sizeof(char) * needed);
@@ -130,7 +135,7 @@ int main(int argc, char *argv[]) {
 			cross_mkdir(argv[2]);
 			cross_chdir(argv[2]);
 			FILE* f = fopen("freight.toml", "w");
-			fprintf(f, "[package]\nname=\"%s\"\ncompiler=\"clang\"\ncflags=\"-std=c99\"", argv[2]);
+			fprintf(f, "[package]\nname = \"%s\"\ncompiler = \"clang\"\ncflags = \"-std=c99\"", argv[2]);
 			fclose(f);
 			cross_mkdir("deps");
 			cross_mkdir("src");

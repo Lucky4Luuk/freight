@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "../deps/dirent/dirent.h"
+#include "../deps/dirent/src/dirent.h"
 
 #if defined(_WIN32)
     #include <wchar.h>
@@ -53,4 +53,11 @@ void cross_chdir(const char* path) {
     #else
         chdir(path);
     #endif
+}
+
+int dir_exists(const char* path) {
+    DIR* dir = opendir(path);
+	if (!dir) { return 0; }
+    closedir(dir);
+    return 1;
 }
