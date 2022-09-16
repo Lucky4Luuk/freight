@@ -38,19 +38,27 @@ void build_recursive(build_config* config, char* basepath, char*** vector) {
 	closedir(dir);
 }
 
-void build_dependencies(build_config* config) {
+void build_dependencies(build_config* config, char*** vector) {
 	printf("Building %d dependencies...\n", config->dep_vec_len);
+	cross_chdir("deps");
 	for (int i = 0; i < config->dep_vec_len; i++) {
 		printf("  Building %s v%s\n", config->dep_vec[i], config->dep_version_vec[i]);
+		cross_chdir(config->dep_vec[i]);
+		system("freight build");
+		cross_chdir("..");
+		int needed = format_length("deps/%s/%s.o", config->dep_vec[i], config->dep_vec[i]);
+		char* s = malloc(sizeof(char) * needed);
+		sprintf(s, "deps/%s/%s.o", config->dep_vec[i], config->dep_vec[i]);
+		arrpush(*vector, s);
 	}
+	cross_chdir("..");
 }
 
 void build(build_config* config) {
-	build_dependencies(config);
-	printf("Building %s...\n", config->name);
 	char** vector = NULL;
+	build_dependencies(config, &vector);
+	printf("Building %s...\n", config->name);
 	build_recursive(config, "src", &vector);
-	build_recursive(config, "deps", &vector);
 	size_t needed = 0;
 	for (int i = 0; i < arrlen(vector); ++i)
 		needed += strlen(vector[i]) + 1;
@@ -66,9 +74,9 @@ void build(build_config* config) {
 
 	// Build command
 	if (config->lib == 1) {
-		needed = format_length("%s %s %s -c %s.o", config->compiler, config->cflags, concat, config->name);
+		needed = format_length("%s %s %s -c -o %s.o", config->compiler, config->cflags, concat, config->name);
 		char* cmd = malloc(sizeof(char) * needed);
-		sprintf(cmd, "%s %s %s -o %s.o", config->compiler, config->cflags, concat, config->name);
+		sprintf(cmd, "%s %s %s -c -o %s.o", config->compiler, config->cflags, concat, config->name);
 		printf("Invoking `%s`\n", cmd);
 		system(cmd);
 	} else {
