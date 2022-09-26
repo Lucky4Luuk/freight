@@ -21,7 +21,7 @@ void build_recursive(build_config* config, char* basepath, char*** vector) {
 
 	while ((dp = readdir(dir)) != NULL) {
 		if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0) {
-			if (ends_with(dp->d_name, ".c")) {
+			if (ends_with(dp->d_name, ".c") || ends_with(dp->d_name, ".cpp")) {
 				int needed = format_length("%s/%s", basepath, dp->d_name);
 				char* s = malloc(sizeof(char) * needed);
 				sprintf(s, "%s/%s", basepath, dp->d_name);
