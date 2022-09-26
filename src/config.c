@@ -79,10 +79,10 @@ build_config* load_config() {
 
 void conf_free(build_config* conf) {
 	// I don't know if this is needed
-	// for (int i = 0; i < conf->dep_vec_len; i++) {
-	// 	free(conf->dep_vec[i]);
-	// 	free(conf->dep_version_vec[i]);
-	// }
+	for (int i = 0; i < conf->dep_vec_len; i++) {
+		free(conf->dep_vec[i]);
+		free(conf->dep_version_vec[i]);
+	}
 	arrfree(conf->dep_vec);
 	arrfree(conf->dep_version_vec);
 }

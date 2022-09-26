@@ -39,6 +39,7 @@ void cross_mkdir(const char* path) {
         wchar_t* ws = malloc(sizeof(wchar_t) * needed);
         swprintf(ws, needed, L"%hs", path);
         _wmkdir(ws);
+        free(ws);
     #else
         mkdir(path, 0777);
     #endif
@@ -50,6 +51,7 @@ void cross_chdir(const char* path) {
         wchar_t* ws = malloc(sizeof(wchar_t) * needed);
         swprintf(ws, needed, L"%hs", path);
         _wchdir(ws);
+        free(ws);
     #else
         chdir(path);
     #endif

@@ -79,6 +79,7 @@ void build(build_config* config) {
 	for (int i = 1; i < arrlen(vector); ++i) {
 		strcat(concat, vector[i]);
 		strcat(concat, " ");
+		free(vector[i]);
 	}
 	arrfree(vector);
 
@@ -90,6 +91,7 @@ void build(build_config* config) {
 		printf("Invoking `%s`\n", cmd);
 		printf("%s", COLOR_RESET);
 		system(cmd);
+		free(cmd);
 	} else {
 		#if defined(_WIN32)
 			needed = format_length("%s %s %s -o %s.exe", config->compiler, config->cflags, concat, config->name);
@@ -103,6 +105,7 @@ void build(build_config* config) {
 		printf("Invoking `%s`\n", cmd);
 		printf("%s", COLOR_RESET);
 		system(cmd);
+		free(cmd);
 	}
 }
 
@@ -116,11 +119,13 @@ void run(build_config* config) {
 		char* cmd = malloc(needed);
 		sprintf(cmd, "%s.exe", config->name);
 		system(cmd);
+		free(cmd);
 	#else
 		int needed = format_length("./%s", config->name);
 		char* cmd = malloc(needed);
 		sprintf(cmd, "./%s", config->name);
 		system(cmd);
+		free(cmd);
 	#endif
 }
 
