@@ -130,6 +130,24 @@ void run(build_config* config) {
 }
 
 struct stat st = {0};
+void new(char* name) {
+	printf("Creating project named %s...\n", name);
+	if (stat(name, &st) != -1) {
+		error("Directory already exists!", NULL);
+	}
+	cross_mkdir(name);
+	cross_chdir(name);
+	FILE* f = fopen("freight.toml", "w");
+	fprintf(f, "[package]\nname = \"%s\"\ncompiler = \"clang\"\ncflags = \"-std=c99\"", name);
+	fclose(f);
+	cross_mkdir("deps");
+	cross_mkdir("src");
+	cross_chdir("src");
+	f = fopen("main.c", "w");
+	fprintf(f, "#include <stdio.h>\n\nint main() {\n\tprintf(\"Hello, world!\\n\");\n\treturn 0;\n}");
+	fclose(f);
+	printf("Project created!\n");
+}
 
 int main(int argc, char *argv[]) {
 	const char* HELP_STRING = "Freight\n  help - shows this\n  new <name> - creates a new project\n  build - builds project in current directory\n  run - builds and runs project in current directory\n";
@@ -139,25 +157,8 @@ int main(int argc, char *argv[]) {
 		if (strcmp(argv[1], "help") == 0) {
 			printf("%s", HELP_STRING);
 		} else if (strcmp(argv[1], "new") == 0) {
-			if (argc < 3) {
-				error("No name provided!", NULL);
-			}
-			printf("Creating project named %s...\n", argv[2]);
-			if (stat(argv[2], &st) != -1) {
-				error("Directory already exists!", NULL);
-			}
-			cross_mkdir(argv[2]);
-			cross_chdir(argv[2]);
-			FILE* f = fopen("freight.toml", "w");
-			fprintf(f, "[package]\nname = \"%s\"\ncompiler = \"clang\"\ncflags = \"-std=c99\"", argv[2]);
-			fclose(f);
-			cross_mkdir("deps");
-			cross_mkdir("src");
-			cross_chdir("src");
-			f = fopen("main.c", "w");
-			fprintf(f, "#include <stdio.h>\n\nint main() {\n\tprintf(\"Hello, world!\\n\");\n\treturn 0;\n}");
-			fclose(f);
-			printf("Project created!\n");
+			if (argc < 3) error("No name provided!", NULL);
+			new(argv[2]);
 		} else if (strcmp(argv[1], "build") == 0) {
 			build_config* config;
 			config = load_config();
